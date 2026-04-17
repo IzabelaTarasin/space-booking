@@ -1,6 +1,8 @@
 package com.IzabelaTarasin.spacebooking.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -8,7 +10,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-public class Flight {
+@Getter
+@Setter
+public class Flight { // jak ten lot jest zapisany w aplikacji i w SQL (z relacjami, @Entity, id)
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
