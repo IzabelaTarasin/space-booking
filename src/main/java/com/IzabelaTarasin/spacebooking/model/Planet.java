@@ -1,5 +1,6 @@
 package com.IzabelaTarasin.spacebooking.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity; //JPA – Java Persistence API, zestaw narzędzi i reguł ktore pozwalaja aplikacji na polaczenie z
 //baza w sposob obiektowy
 //mapuje klasy Javy na tabele klasa na tabele, pole na kolumny, obiekt to wiersz
@@ -13,7 +14,10 @@ public class Planet {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
+    @Column(unique = true, nullable = false)
+
     private String name;
+    @Column(nullable = false)
     private String galaxy;
     private String description;
 }

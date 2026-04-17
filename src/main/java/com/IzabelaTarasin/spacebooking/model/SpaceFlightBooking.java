@@ -4,12 +4,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity //klasa jest encja JPA
+@Getter
+@Setter
 public class SpaceFlightBooking {
     @Id
     //@GeneratedValue(strategy = GenerationType.IDENTITY)  //dzieki temu system sam nada kolejny numery ID, nie trzeba recznie.
