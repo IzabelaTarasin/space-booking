@@ -2,16 +2,20 @@ package com.IzabelaTarasin.spacebooking.service;
 
 import com.IzabelaTarasin.spacebooking.error.BadRequestException;
 import com.IzabelaTarasin.spacebooking.error.ConflictException;
+import com.IzabelaTarasin.spacebooking.error.NotFoundException;
 import com.IzabelaTarasin.spacebooking.model.*;
 import com.IzabelaTarasin.spacebooking.repository.FlightRepository;
 import com.IzabelaTarasin.spacebooking.repository.SpaceFlightBookingRepository;
 import com.IzabelaTarasin.spacebooking.repository.UserRepository;
-import com.IzabelaTarasin.spacebooking.error.NotFoundException;
+import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
+@Service
 public class SpaceFlightBookingService {
 
     //Czy taki użytkownik istnieje?
@@ -39,8 +43,8 @@ public class SpaceFlightBookingService {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("FLIGHT_NOT_FOUND",
                         "Nie znaleziono lotu dla trasy "
-                                + originPlanet + " - "
-                                + destinationPlanet + " w terminie "
+                                + originPlanet.getName() + " - "
+                                + destinationPlanet.getName() + " w terminie "
                                 + preferredDate));
     }
 
@@ -64,7 +68,26 @@ public class SpaceFlightBookingService {
         SpaceFlightBooking spaceFlightBooking = new SpaceFlightBooking();
         spaceFlightBooking.setUser(user);
         spaceFlightBooking.setFlight(flight);
+        spaceFlightBooking.setPaymentStatus(PaymentStatus.SUCCESS);
+        spaceFlightBooking.setFinalPrice(calculatePrice(flight.getDepartureDate()));
 
         return spaceFlightBookingRepository.save(spaceFlightBooking);
+    }
+
+    private static int sumDigitsInDate(LocalDateTime date) {
+        int sum = 0;
+        for (char c : date.toString().toCharArray()) {
+            if (Character.isDigit(c)) {
+                sum += c - '0';
+            }
+        }
+        return sum;
+    }
+
+    private static BigDecimal calculatePrice(LocalDateTime departureDate){
+        int baza = sumDigitsInDate(departureDate);
+        int los = ThreadLocalRandom.current().nextInt(1, 101);
+        BigDecimal finalPrice = BigDecimal.valueOf((long) baza * los);
+        return finalPrice;
     }
 }
