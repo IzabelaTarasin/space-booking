@@ -3,6 +3,7 @@ package com.IzabelaTarasin.spacebooking.service;
 import com.IzabelaTarasin.spacebooking.error.ConflictException;
 import com.IzabelaTarasin.spacebooking.error.FieldError;
 import com.IzabelaTarasin.spacebooking.error.NotFoundException;
+import com.IzabelaTarasin.spacebooking.error.UnauthorizedException;
 import com.IzabelaTarasin.spacebooking.model.User;
 import com.IzabelaTarasin.spacebooking.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,18 @@ public class UserService {
                 .findById(id)
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND",
                         "Nie znaleziono użytkownika o id:" + id));
+    }
+
+    public User login(String email, String rawPassword){
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("AUTH_FAILED",
+                "Nieprawidłowy email lub hasło"));
+        if(!passwordEncoder.matches(rawPassword, user.getPassword())) {  //weryfikacja kryptograficznje zgodnosci
+            throw new UnauthorizedException("AUTH_FAILED",
+                    "Nieprawidłowy email lub hasło");
+        }
+        return user;
     }
 
     public User createUser(User user){
