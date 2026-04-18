@@ -3,8 +3,10 @@ package com.IzabelaTarasin.spacebooking.service;
 import com.IzabelaTarasin.spacebooking.error.ConflictException;
 import com.IzabelaTarasin.spacebooking.error.FieldError;
 import com.IzabelaTarasin.spacebooking.error.NotFoundException;
+import com.IzabelaTarasin.spacebooking.error.UnauthorizedException;
 import com.IzabelaTarasin.spacebooking.model.User;
 import com.IzabelaTarasin.spacebooking.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,9 +16,11 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> getAllUsers(){
@@ -27,6 +31,18 @@ public class UserService {
                 .findById(id)
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND",
                         "Nie znaleziono użytkownika o id:" + id));
+    }
+
+    public User login(String email, String rawPassword){
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new UnauthorizedException("AUTH_FAILED",
+                "Nieprawidłowy email lub hasło"));
+        if(!passwordEncoder.matches(rawPassword, user.getPassword())) {  //weryfikacja kryptograficznje zgodnosci
+            throw new UnauthorizedException("AUTH_FAILED",
+                    "Nieprawidłowy email lub hasło");
+        }
+        return user;
     }
 
     public User createUser(User user){
@@ -47,6 +63,8 @@ public class UserService {
         }
         user.setId(null); //jeśli ktoś wyśle id w JSON-ie, i tak zawsze robił się insert i wygenerowało się nowe UUID
         //bez tego gdy wysle w post users id to mam bla 500 error
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         return userRepository.save(user);
     }
 

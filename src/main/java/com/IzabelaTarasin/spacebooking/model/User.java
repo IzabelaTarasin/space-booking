@@ -1,5 +1,6 @@
 package com.IzabelaTarasin.spacebooking.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,6 +23,9 @@ public class User {
     @Column(unique = true, nullable = false)
     private String telephoneNumber;
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) //i tak mam dto bez hasla, ale dobra praktyka jako zabezpieczenie
+    //gdyby kiedyś zwrócić encję User —
+    // przy serializacji do JSON hasło nie trafia do odpowiedzi (WRITE_ONLY).
     private String password;
     @Column(nullable = false)
     private String firstName;
