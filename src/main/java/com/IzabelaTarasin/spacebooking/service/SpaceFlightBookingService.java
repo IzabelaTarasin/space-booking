@@ -56,7 +56,7 @@ public class SpaceFlightBookingService {
         Flight flight = findFlightForBooking(originPlanet, destinationPlanet, preferredDate);
 
         // 2. Logika biznesowa: Sprawdź miejsca (jeśli dodasz seatCapacity)
-        long currentBookings = spaceFlightBookingRepository.countByFlight_Id(flight.getId());
+        long currentBookings = spaceFlightBookingRepository.countByFlightId(flight.getId());
         if(currentBookings >= flight.getSpacecraft().getSeatCapacity()){
             throw new ConflictException("NO_SEATS_AVAILABLE", "Brak wolnych miejsc w statku!");
         };
