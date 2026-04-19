@@ -5,11 +5,15 @@ import jakarta.persistence.Entity; //JPA – Java Persistence API, zestaw narzę
 //baza w sposob obiektowy
 //mapuje klasy Javy na tabele klasa na tabele, pole na kolumny, obiekt to wiersz
 import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
 @Entity
+@Getter
+@Setter
 public class Planet {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
