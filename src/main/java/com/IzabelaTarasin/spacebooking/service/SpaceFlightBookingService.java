@@ -7,6 +7,7 @@ import com.IzabelaTarasin.spacebooking.model.*;
 import com.IzabelaTarasin.spacebooking.repository.FlightRepository;
 import com.IzabelaTarasin.spacebooking.repository.SpaceFlightBookingRepository;
 import com.IzabelaTarasin.spacebooking.repository.UserRepository;
+import com.IzabelaTarasin.spacebooking.util.SumDigitsInDateTime;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -74,20 +75,10 @@ public class SpaceFlightBookingService {
         return spaceFlightBookingRepository.save(spaceFlightBooking);
     }
 
-    private static int sumDigitsInDate(LocalDateTime date) {
-        int sum = 0;
-        for (char c : date.toString().toCharArray()) {
-            if (Character.isDigit(c)) {
-                sum += c - '0';
-            }
-        }
-        return sum;
-    }
-
     private static BigDecimal calculatePrice(LocalDateTime departureDate){
-        int baza = sumDigitsInDate(departureDate);
-        int los = ThreadLocalRandom.current().nextInt(1, 101);
-        BigDecimal finalPrice = BigDecimal.valueOf((long) baza * los);
+        int base = SumDigitsInDateTime.sumDigits(departureDate);
+        int random = ThreadLocalRandom.current().nextInt(1, 101);
+        BigDecimal finalPrice = BigDecimal.valueOf((long) base * random);
         return finalPrice;
     }
 }
