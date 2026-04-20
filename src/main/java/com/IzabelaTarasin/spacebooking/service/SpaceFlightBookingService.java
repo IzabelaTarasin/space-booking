@@ -37,7 +37,7 @@ public class SpaceFlightBookingService {
     private Flight findFlightForBooking(Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
         // 1. Szukamy lotów na danej trasie
         List<Flight> availableFlights = flightRepository.findByOriginPlanetAndDestinationPlanet(originPlanet, destinationPlanet);
-        // 2. Filtrujemy te, które startują po wybranej dacie i mają status PLANNED
+        // 2. Filtrujemy te, które startują po wybranej dacie i mają status SCHEDULED
         return availableFlights.stream()
                 .filter(f -> f.getStatus().equals(FlightStatus.SCHEDULED))
                 .filter(f -> f.getDepartureDate().isAfter(preferredDate))

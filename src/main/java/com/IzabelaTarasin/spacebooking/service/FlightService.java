@@ -30,7 +30,7 @@ public class FlightService {
             throw new BadRequestException("ORIGIN_EQUALS_DESTINATION", "Planeta startowa i docelowa nie mogą być takie same!");
         }
 
-        //Walidacja:  data przylotu jest po dacie odlotu?
+        //Walidacja:  data przylotu wczesnijesza niz data odlotu
         if(flight.getArrivalDate().isBefore(flight.getDepartureDate())){
             throw new BadRequestException("ARRIVAL_BEFORE_DEPARTURE","Data przylotu nie może być wcześniejsza niż data odlotu!");
         }
@@ -54,7 +54,6 @@ public class FlightService {
         existingFlight.setDepartureDate(flight.getDepartureDate());
         existingFlight.setArrivalDate(flight.getArrivalDate());
         existingFlight.setSpacecraft(flight.getSpacecraft());
-        //existingFlight.setStatus(flight.getStatus()); //TODO: status ma byc ustawiany przez system nie przez uzytkownika
         existingFlight.setOriginPlanet(flight.getOriginPlanet());
         existingFlight.setDestinationPlanet(flight.getDestinationPlanet());
 
