@@ -5,6 +5,7 @@ import com.IzabelaTarasin.spacebooking.error.ConflictException;
 import com.IzabelaTarasin.spacebooking.error.NotFoundException;
 import com.IzabelaTarasin.spacebooking.model.Flight;
 import com.IzabelaTarasin.spacebooking.model.FlightStatus;
+import com.IzabelaTarasin.spacebooking.model.Spacecraft;
 import com.IzabelaTarasin.spacebooking.repository.FlightRepository;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,9 @@ public class FlightService {
             throw new ConflictException("FLIGHT_NUMBER_TAKEN","Lot o numerze " + flight.getFlightNumber() + " już istnieje");
         }
 
+        validateSpacecraftSeatCapacity(flight.getSpacecraft());
+        flight.setAvailableSeats(flight.getSpacecraft().getSeatCapacity()); // poczatkowa ilosc miejsc
+
         return flightRepository.save(flight);
     }
 
@@ -56,6 +60,8 @@ public class FlightService {
         existingFlight.setSpacecraft(flight.getSpacecraft());
         existingFlight.setOriginPlanet(flight.getOriginPlanet());
         existingFlight.setDestinationPlanet(flight.getDestinationPlanet());
+
+        validateSpacecraftSeatCapacity(flight.getSpacecraft());
 
         return flightRepository.save(existingFlight);
     }
@@ -101,5 +107,18 @@ public class FlightService {
 
     public List<Flight> getCheapFlights(BigDecimal maxPrice){
         return flightRepository.findCheapFlights(maxPrice);
+    }
+    private static void validateSpacecraftSeatCapacity(Spacecraft spacecraft) {
+        if (spacecraft == null) {
+            throw new BadRequestException(
+                    "SPACECRAFT_REQUIRED",
+                    "Lot nie ma przypisanego statek kosmiczny.");
+        }
+        Integer cap = spacecraft.getSeatCapacity();
+        if (cap == null || cap < 1) {
+            throw new BadRequestException(
+                    "INVALID_SEAT_CAPACITY",
+                    "Pojemność statku (seatCapacity) musi być ustawiona i większa od zera.");
+        }
     }
 }

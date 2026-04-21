@@ -27,4 +27,5 @@ public interface SpaceFlightBookingRepository extends JpaRepository<SpaceFlightB
 
     //5. sprawz ile jest miejsc wolnych
     long countByFlightId(UUID flightID);
+    boolean existsByUser(User user);  //uzytkownik moze miec tylko jedna rezerwacje
 }

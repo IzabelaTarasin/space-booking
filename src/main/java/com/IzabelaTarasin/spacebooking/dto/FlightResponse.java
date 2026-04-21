@@ -22,4 +22,5 @@ public class FlightResponse {
     private Spacecraft spacecraft;
     private BigDecimal basePrice;  //cena "katalogowa"
     private FlightStatus status;
+    private Integer availableSeats;
 }
