@@ -34,4 +34,6 @@ public class Flight { // jak ten lot jest zapisany w aplikacji i w SQL (z relacj
     private FlightStatus status = FlightStatus.SCHEDULED; //ustawiam domyslna wartosc
     @Column(nullable = false)
     private Integer availableSeats;
+    @Version
+    private Long version;
 }

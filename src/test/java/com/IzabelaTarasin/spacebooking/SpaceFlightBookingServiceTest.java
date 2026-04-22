@@ -71,18 +71,19 @@ public class SpaceFlightBookingServiceTest {
         LocalDateTime preferredDate = LocalDateTime.parse("2030-01-01T00:00:00");
 
         Spacecraft spacecraft = new Spacecraft();
-        spacecraft.setSeatCapacity(10);
+        spacecraft.setSeatCapacity(5);
 
         Flight flight = new Flight();
         flight.setId(UUID.fromString("c0000001-0000-0000-0000-000000000001"));
         flight.setStatus(FlightStatus.SCHEDULED);
         flight.setDepartureDate(LocalDateTime.parse("2030-06-15T10:00:00"));
         flight.setSpacecraft(spacecraft);
+        flight.setAvailableSeats(5);
 
         when(flightRepository.findByOriginPlanetAndDestinationPlanet(origin, destination))
                 .thenReturn(List.of(flight));
-        when(spaceFlightBookingRepository.countByFlightId(flight.getId()))
-                .thenReturn(0L);
+        when(flightRepository.findById(flight.getId())).thenReturn(Optional.of(flight));
+        when(spaceFlightBookingRepository.existsByUser(user)).thenReturn(false);
         when(spaceFlightBookingRepository.save(any(SpaceFlightBooking.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // act
