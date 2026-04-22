@@ -1,9 +1,6 @@
 package com.IzabelaTarasin.spacebooking.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
@@ -21,10 +18,11 @@ public class SpaceFlightBooking {
     //opcja ta nie nadaje się do duzych paczek danych
     @UuidGenerator(style = UuidGenerator.Style.TIME) //zamiast @GeneratedValue, dodanie TIME powoduje ze nowe rekordy zawsze na koncu (przyspiesza baze)
     private UUID id;
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "flight_id", nullable = false)
     private Flight flight;
 

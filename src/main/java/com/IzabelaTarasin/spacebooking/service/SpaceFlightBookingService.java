@@ -1,5 +1,6 @@
 package com.IzabelaTarasin.spacebooking.service;
 
+import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingMapper;
 import com.IzabelaTarasin.spacebooking.error.BadRequestException;
 import com.IzabelaTarasin.spacebooking.error.ConflictException;
 import com.IzabelaTarasin.spacebooking.error.NotFoundException;
@@ -10,6 +11,7 @@ import com.IzabelaTarasin.spacebooking.repository.UserRepository;
 import com.IzabelaTarasin.spacebooking.util.SumDigitsInDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,11 +30,13 @@ public class SpaceFlightBookingService {
     private final SpaceFlightBookingRepository spaceFlightBookingRepository;
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;
+    private final SpaceFlightBookingMapper spaceFlightBookingMapper;
 
-    public SpaceFlightBookingService(SpaceFlightBookingRepository spaceFlightBookingRepository, UserRepository userRepository, FlightRepository flightRepository){
+    public SpaceFlightBookingService(SpaceFlightBookingRepository spaceFlightBookingRepository, UserRepository userRepository, FlightRepository flightRepository, SpaceFlightBookingMapper spaceFlightBookingMapper){
         this.spaceFlightBookingRepository = spaceFlightBookingRepository;
         this.userRepository = userRepository;
         this.flightRepository = flightRepository;
+        this.spaceFlightBookingMapper = spaceFlightBookingMapper;
     }
 
     private Flight findFlightForBooking(Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
@@ -52,7 +56,7 @@ public class SpaceFlightBookingService {
     }
 
     @Transactional
-    public SpaceFlightBooking bookFlight(UUID userID, Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
+    public SpaceFlightBookingResponse bookFlight(UUID userID, Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
         // 1. Pobierz usera i lot (lub rzuć błąd)
         User user = userRepository
                 .findById(userID)
@@ -87,7 +91,8 @@ public class SpaceFlightBookingService {
         spaceFlightBooking.setPaymentStatus(PaymentStatus.SUCCESS);
         spaceFlightBooking.setFinalPrice(calculatePrice(flight.getDepartureDate()));
 
-        return spaceFlightBookingRepository.save(spaceFlightBooking);
+        SpaceFlightBooking savedSpaceFlightBooking = spaceFlightBookingRepository.save(spaceFlightBooking);
+        return spaceFlightBookingMapper.toDTO(savedSpaceFlightBooking);
     }
 
     private static BigDecimal calculatePrice(LocalDateTime departureDate){

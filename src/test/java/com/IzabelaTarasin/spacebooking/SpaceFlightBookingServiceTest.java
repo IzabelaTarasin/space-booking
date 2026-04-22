@@ -1,5 +1,7 @@
 package com.IzabelaTarasin.spacebooking;
 
+import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingMapper;
+import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingResponse;
 import com.IzabelaTarasin.spacebooking.error.NotFoundException;
 import com.IzabelaTarasin.spacebooking.model.*;
 import com.IzabelaTarasin.spacebooking.repository.FlightRepository;
@@ -19,9 +21,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.any;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +34,8 @@ public class SpaceFlightBookingServiceTest {
     private UserRepository userRepository;
     @Mock
     private FlightRepository flightRepository;
+    @Mock
+    private SpaceFlightBookingMapper spaceFlightBookingMapper;
     @InjectMocks
     private SpaceFlightBookingService spaceFlightBookingService;
 
@@ -83,16 +87,26 @@ public class SpaceFlightBookingServiceTest {
         when(flightRepository.findByOriginPlanetAndDestinationPlanet(origin, destination))
                 .thenReturn(List.of(flight));
         when(flightRepository.findById(flight.getId())).thenReturn(Optional.of(flight));
+        when(flightRepository.save(any(Flight.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(spaceFlightBookingRepository.existsByUser(user)).thenReturn(false);
         when(spaceFlightBookingRepository.save(any(SpaceFlightBooking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(spaceFlightBookingMapper.toDTO(any(SpaceFlightBooking.class))).thenAnswer(invocation -> {
+            SpaceFlightBooking b = invocation.getArgument(0);
+            SpaceFlightBookingResponse r = new SpaceFlightBookingResponse();
+            r.setUserId(b.getUser().getId());
+            r.setFlightId(b.getFlight().getId());
+            r.setPaymentStatus(b.getPaymentStatus());
+            r.setFinalPrice(b.getFinalPrice());
+            return r;
+        });
 
         // act
-        SpaceFlightBooking bookingResult = spaceFlightBookingService.bookFlight(
+        SpaceFlightBookingResponse bookingResult = spaceFlightBookingService.bookFlight(
                 userId, origin, destination, preferredDate);
 
         // assert
-        assertSame(user, bookingResult.getUser());
-        assertSame(flight, bookingResult.getFlight());
+        assertEquals(userId, bookingResult.getUserId());
+        assertEquals(flight.getId(), bookingResult.getFlightId());
         assertEquals(PaymentStatus.SUCCESS, bookingResult.getPaymentStatus());
         assertNotNull(bookingResult.getFinalPrice());
         //assertSame(a, b) — sprawdza, czy to ta sama referencja w pamięci (a == b). Tu chcesz dokładnie tego: na rezerwacji ma być ten sam user i ten sam flight, które przygotowałaś.
@@ -101,6 +115,8 @@ public class SpaceFlightBookingServiceTest {
         verify(spaceFlightBookingRepository).save(any(SpaceFlightBooking.class));
         verify(userRepository).findById(userId);
         verify(flightRepository).findByOriginPlanetAndDestinationPlanet(origin, destination);
+        verify(flightRepository).save(any(Flight.class));
+        verify(spaceFlightBookingMapper).toDTO(any(SpaceFlightBooking.class));
         //id rezerwacji — pojawia się dopiero po save z generatorem;
         // w teście save zwraca ten sam obiekt bez ustawiania id w serwisie -> fałszywy fail gdyby assercia not null
     }
