@@ -1,5 +1,8 @@
 package com.IzabelaTarasin.spacebooking.error;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +13,7 @@ import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex) {
@@ -60,5 +64,27 @@ public class GlobalExceptionHandler {
         //code: VALIDATION_ERROR
         //message: „Niepoprawne dane wejściowe”
         //fieldErrors: lista pól i komunikatów
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLock(OptimisticLockingFailureException ex) {
+        log.warn("Optimistic lock conflict: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ApiError(
+                        "CONCURRENT_MODIFICATION",
+                        "Rekord został zmieniony równolegle. Spróbuj ponownie."
+                ));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleAny(Exception ex) {
+        log.error("Exception: ", ex.getClass().getName(), ex.getMessage(), ex);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiError(
+                        "INTERNAL_ERROR",
+                        "Wystąpił nieoczekiwany błąd serwera."
+                ));
     }
 }
