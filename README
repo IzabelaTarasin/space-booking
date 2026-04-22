@@ -1,0 +1,56 @@
+Uruchamia aplikację Spring Boot przez Maven: kompiluje, buduje classpath i startuje główną klasę z pom.xml
+mvn spring-boot:run
+
+Najpierw wykonuje fazę clean (usuwa katalog target)
+mvn clean spring-boot:run
+
+Wypisanie procesów na porcie 8080
+lsof -i :8080
+
+Zamknięcie procesu
+kill <PID>
+
+Wymuszenie zamkniecia procesu
+kill -9 <PID>
+
+Pokazuje typ pliku i wykryte kodowanie
+file -I src/main/resources/application.properties
+
+Zamiana znakow na UTF 8 i zapisanie do nowego pliku
+iconv -f ISO-8859-1 -t UTF-8 src/main/resources/application.properties > /tmp/application.properties.utf8
+
+Podmienia stary plik na nowy
+mv /tmp/application.properties.utf8 src/main/resources/application.properties
+
+API (baza)
+http://localhost:8080/
+
+Konsola H2 (dotyczy tylko uruchomienia lokalnego)
+http://localhost:8080/h2-console
+username=sa
+password=
+
+Swagger UI
+http://localhost:8080/swagger-ui/index.html
+
+OpenAPI JSON
+http://localhost:8080/v3/api-docs
+
+
+-----
+Jak testować (Swagger / curl)
+POST /users — utwórz użytkownika (hasło zapisze się jako BCrypt).
+POST /auth/login z body:
+{ "email": "ten@sam.pl", "hasło": "jak przy rejestracji" }
+
+200 + UserResponse (bez hasła).
+Zły email lub hasło → 401, code: AUTH_FAILED.
+
+-----
+uruchomienie testów Maven
+wszystkie testy:
+./mvnw test
+tylko jedna klasa (przykład):
+./mvnw test -Dtest=SpaceFlightBookingServiceTest
+Na Windowsie:
+mvnw.cmd test
