@@ -44,6 +44,7 @@ public class FlightMapper {
         flightDTO.setSpacecraft(flight.getSpacecraft());
         flightDTO.setBasePrice(flight.getBasePrice());
         flightDTO.setStatus(flight.getStatus());
+        flightDTO.setAvailableSeats(flight.getAvailableSeats());
 
         return flightDTO;
     }

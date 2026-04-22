@@ -1,5 +1,6 @@
 package com.IzabelaTarasin.spacebooking.service;
 
+import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingMapper;
 import com.IzabelaTarasin.spacebooking.error.BadRequestException;
 import com.IzabelaTarasin.spacebooking.error.ConflictException;
 import com.IzabelaTarasin.spacebooking.error.NotFoundException;
@@ -9,6 +10,8 @@ import com.IzabelaTarasin.spacebooking.repository.SpaceFlightBookingRepository;
 import com.IzabelaTarasin.spacebooking.repository.UserRepository;
 import com.IzabelaTarasin.spacebooking.util.SumDigitsInDateTime;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,11 +30,13 @@ public class SpaceFlightBookingService {
     private final SpaceFlightBookingRepository spaceFlightBookingRepository;
     private final UserRepository userRepository;
     private final FlightRepository flightRepository;
+    private final SpaceFlightBookingMapper spaceFlightBookingMapper;
 
-    public SpaceFlightBookingService(SpaceFlightBookingRepository spaceFlightBookingRepository, UserRepository userRepository, FlightRepository flightRepository){
+    public SpaceFlightBookingService(SpaceFlightBookingRepository spaceFlightBookingRepository, UserRepository userRepository, FlightRepository flightRepository, SpaceFlightBookingMapper spaceFlightBookingMapper){
         this.spaceFlightBookingRepository = spaceFlightBookingRepository;
         this.userRepository = userRepository;
         this.flightRepository = flightRepository;
+        this.spaceFlightBookingMapper = spaceFlightBookingMapper;
     }
 
     private Flight findFlightForBooking(Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
@@ -41,6 +46,7 @@ public class SpaceFlightBookingService {
         return availableFlights.stream()
                 .filter(f -> f.getStatus().equals(FlightStatus.SCHEDULED))
                 .filter(f -> f.getDepartureDate().isAfter(preferredDate))
+                .filter(f -> f.getAvailableSeats() != null && f.getAvailableSeats() > 0)
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("FLIGHT_NOT_FOUND",
                         "Nie znaleziono lotu dla trasy "
@@ -49,22 +55,35 @@ public class SpaceFlightBookingService {
                                 + preferredDate));
     }
 
-    public SpaceFlightBooking bookFlight(UUID userID, Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
+    @Transactional
+    public SpaceFlightBookingResponse bookFlight(UUID userID, Planet originPlanet, Planet destinationPlanet, LocalDateTime preferredDate){
         // 1. Pobierz usera i lot (lub rzuć błąd)
         User user = userRepository
                 .findById(userID)
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND","Nie ma takiego użytkownika o id: " + userID));
-        Flight flight = findFlightForBooking(originPlanet, destinationPlanet, preferredDate);
 
-        // 2. Logika biznesowa: Sprawdź miejsca (jeśli dodasz seatCapacity)
-        long currentBookings = spaceFlightBookingRepository.countByFlightId(flight.getId());
-        if(currentBookings >= flight.getSpacecraft().getSeatCapacity()){
-            throw new ConflictException("NO_SEATS_AVAILABLE", "Brak wolnych miejsc w statku!");
-        };
+        if (spaceFlightBookingRepository.existsByUser(user)) {
+            throw new ConflictException(
+                    "USER_ALREADY_HAS_BOOKING",
+                    "Użytkownik może mieć tylko jedną rezerwację lotu.");
+        }
+
+        Flight flight = flightRepository
+                .findById(findFlightForBooking(originPlanet, destinationPlanet, preferredDate).getId())
+                .orElseThrow(() -> new NotFoundException("FLIGHT_NOT_FOUND", "Nie znaleziono lotu"));
+
         //3. weryfikacja daty, czy nie bookuje z przeszlości
         if(flight.getDepartureDate().isBefore(LocalDateTime.now())){
             throw new BadRequestException("DEPARTURE_IN_PAST", "Nie można zarezerwować lotu z datą przeszłą");
         }
+
+        //2. Logika biznesowa: Sprawdź dostepne miejsca we flight
+        Integer seats = flight.getAvailableSeats();
+        if (seats == null || seats < 1) {
+            throw new ConflictException("NO_SEATS_AVAILABLE", "Brak wolnych miejsc na tym locie.");
+        }
+        flight.setAvailableSeats(seats - 1);
+        flightRepository.save(flight);
 
         SpaceFlightBooking spaceFlightBooking = new SpaceFlightBooking();
         spaceFlightBooking.setUser(user);
@@ -72,7 +91,8 @@ public class SpaceFlightBookingService {
         spaceFlightBooking.setPaymentStatus(PaymentStatus.SUCCESS);
         spaceFlightBooking.setFinalPrice(calculatePrice(flight.getDepartureDate()));
 
-        return spaceFlightBookingRepository.save(spaceFlightBooking);
+        SpaceFlightBooking savedSpaceFlightBooking = spaceFlightBookingRepository.save(spaceFlightBooking);
+        return spaceFlightBookingMapper.toDTO(savedSpaceFlightBooking);
     }
 
     private static BigDecimal calculatePrice(LocalDateTime departureDate){

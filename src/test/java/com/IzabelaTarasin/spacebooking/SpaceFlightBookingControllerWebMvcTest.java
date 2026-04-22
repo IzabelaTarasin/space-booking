@@ -5,7 +5,6 @@ import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingMapper;
 import com.IzabelaTarasin.spacebooking.dto.SpaceFlightBookingResponse;
 import com.IzabelaTarasin.spacebooking.model.PaymentStatus;
 import com.IzabelaTarasin.spacebooking.model.Planet;
-import com.IzabelaTarasin.spacebooking.model.SpaceFlightBooking;
 import com.IzabelaTarasin.spacebooking.repository.PlanetRepository;
 import com.IzabelaTarasin.spacebooking.service.SpaceFlightBookingService;
 import org.junit.jupiter.api.Test;
@@ -35,15 +34,16 @@ class SpaceFlightBookingControllerWebMvcTest {
     @MockitoBean
     private SpaceFlightBookingService spaceFlightBookingService;
     @MockitoBean
-    private SpaceFlightBookingMapper spaceFlightBookingMapper;
-    @MockitoBean
     private PlanetRepository planetRepository;
+    @MockitoBean
+    private SpaceFlightBookingMapper spaceFlightBookingMapper;
     @Test
     public void postCreateSpaceFlightBooking_returns201LocationAndJsonBody() throws Exception {
         UUID userId = UUID.fromString("a0000001-0000-0000-0000-000000000099");
         UUID originId = UUID.fromString("b0000001-0000-0000-0000-000000000001");
         UUID destinationId = UUID.fromString("b0000001-0000-0000-0000-000000000002");
         UUID bookingId = UUID.fromString("c0000001-0000-0000-0000-000000000099");
+
         Planet origin = new Planet();
         origin.setName("Earth");
         Planet destination = new Planet();
@@ -52,11 +52,7 @@ class SpaceFlightBookingControllerWebMvcTest {
         when(planetRepository.findById(originId)).thenReturn(Optional.of(origin));
         when(planetRepository.findById(destinationId)).thenReturn(Optional.of(destination));
 
-        SpaceFlightBooking saved = new SpaceFlightBooking();
-
-        when(spaceFlightBookingService.bookFlight(
-                eq(userId), eq(origin), eq(destination), any(LocalDateTime.class)))
-                .thenReturn(saved);
+        SpaceFlightBookingResponse dtoSpaceFlightBooking = new SpaceFlightBookingResponse();
 
         SpaceFlightBookingResponse dto = new SpaceFlightBookingResponse();
         dto.setId(bookingId);
@@ -65,7 +61,9 @@ class SpaceFlightBookingControllerWebMvcTest {
         dto.setFinalPrice(BigDecimal.valueOf(123));
         dto.setPaymentStatus(PaymentStatus.SUCCESS);
 
-        when(spaceFlightBookingMapper.toDTO(saved)).thenReturn(dto);
+        when(spaceFlightBookingService.bookFlight(
+                eq(userId), eq(origin), eq(destination), any(LocalDateTime.class)))
+                .thenReturn(dto);
 
         String json = """
                 {
